@@ -42,8 +42,8 @@ welcome_message = """
   1. To set up, please add your Google Gemini API key. 🔑 
   2. Type in a job description query. 💬
 
-  Hint: The knowledge base of the LLM has been loaded with a pre-existing vectorstore of [resumes](https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline/blob/main/data/main-data/synthetic-resumes.csv) to be used right away. 
-  In addition, you may also find example job descriptions to test [here](https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline/blob/main/data/supplementary-data/job_title_des.csv).
+  Hint: The knowledge base of the LLM has been loaded with a pre-existing vectorstore of [resumes](https://github.com/Rohan452004/RAG-Based-AI-Powered-Resume-Screener/blob/main/data/main-data/synthetic-resumes.csv) to be used right away. 
+  In addition, you may also find example job descriptions to test [here](https://github.com/Rohan452004/RAG-Based-AI-Powered-Resume-Screener/blob/main/data/supplementary-data/job_title_des.csv).
 
   Please make sure to check the sidebar for more useful information. 💡
 """
@@ -80,16 +80,16 @@ info_message = """
   The system also records the chat history and chooses to use it in certain cases, allowing users to ask follow-up questions or tasks on the retrieved resumes.
 """
 
-about_message = """
-  # About
+# about_message = """
+#   # About
 
-  This small program is a prototype designed out of pure interest as additional work for the author's Bachelor's thesis project. 
-  The aim of the project is to propose and prove the effectiveness of RAG-based models in resume screening, thus inspiring more research into this field.
+#   This small program is a prototype designed out of pure interest as additional work for the author's Bachelor's thesis project. 
+#   The aim of the project is to propose and prove the effectiveness of RAG-based models in resume screening, thus inspiring more research into this field.
 
-  The program is very much a work in progress. I really appreciate any contribution or feedback on [GitHub](https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline).
+#   The program is very much a work in progress. I really appreciate any contribution or feedback on [GitHub](https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline).
 
-  If you are interested, please don't hesitate to give me a star. ⭐
-"""
+#   If you are interested, please don't hesitate to give me a star. ⭐
+# """
 
 
 st.set_page_config(page_title="Resume Screening with Gemini")
@@ -184,7 +184,7 @@ with st.sidebar:
   st.markdown("# Control Panel")
 
   st.text_input("Google Gemini API Key", type="password", key="api_key")
-  st.selectbox("RAG Mode", ["Generic RAG", "RAG Fusion"], placeholder="Generic RAG", key="rag_selection")
+  st.selectbox("RAG Mode", ["Generic RAG"], placeholder="Generic RAG", key="rag_selection")
   st.selectbox("Gemini Model", 
                ["gemini-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"],
                index=0,
@@ -195,9 +195,9 @@ with st.sidebar:
   st.divider()
   st.markdown(info_message)
 
-  st.divider()
-  st.markdown(about_message)
-  st.markdown("Made by [Hungreeee](https://github.com/Hungreeee)")
+  # st.divider()
+  # st.markdown(about_message)
+  # st.markdown("Made by [Hungreeee](https://github.com/Hungreeee)")
 
 
 for message in st.session_state.chat_history:
