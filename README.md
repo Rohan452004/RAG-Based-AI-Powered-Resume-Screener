@@ -21,14 +21,6 @@ RAG-like frameworks are great tools to enhance the reliability of chatbots. Over
 
 On the other hand, RAG Fusion is effective in addressing complex and ambiguous human-written prompts. While the LLM generator can handle this problem effectively, the retriever may struggle to find relevant documents when presented with multifaceted queries. Therefore, this technique can be used to improve resume retrieval quality when the system receives complex job descriptions (which are quite common in hiring).
 
-> [!NOTE]
-> For more info, please refer to the paper: [Google Drive](https://drive.google.com/drive/folders/19pL-MNfPUVsxePHd8FDvddnoC3S_zNFN?usp=drive_link)
-
-## Demo
-
-The demo interface of the chatbot can be found here: [Streamlit](https://resume-screening-rag-gpt.streamlit.app)
-
-Default synthetic resume data set used in the demo: [GitHub](https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline/blob/main/data/main-data/synthetic-resumes.csv)
 
 Source job description dataset: [Kaggle](https://www.kaggle.com/datasets/kshitizregmi/jobs-and-job-description)
 
