@@ -3,7 +3,7 @@ sys.dont_write_bytecode = True
 
 from dotenv import load_dotenv
 
-from langchain_openai.chat_models import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
 
 
@@ -13,15 +13,14 @@ DATA_PATH = os.getenv("DATA_PATH")
 FAISS_PATH = os.getenv("FAISS_PATH")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
 RAG_K_THRESHOLD = 5
-LLM_MODEL = "gpt-35-turbo"
-CUSTOMED_ENDPOINT = "https://aalto-openai-apigw.azure-api.net"
+LLM_MODEL = "gemini-flash-latest"
 
 
 class ChatBot():
   def __init__(self, api_key: str, model: str):
-    self.llm = ChatOpenAI(
+    self.llm = ChatGoogleGenerativeAI(
       model=model, 
-      api_key=api_key, 
+      google_api_key=api_key, 
       temperature=0.1
     )
 

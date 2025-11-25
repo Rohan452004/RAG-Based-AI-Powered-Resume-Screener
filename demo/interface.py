@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 import pandas as pd
 import streamlit as st
-import openai
+import google.generativeai as genai
 from streamlit_modal import Modal
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -18,6 +18,7 @@ from llm_agent import ChatBot
 from ingest_data import ingest
 from retriever import SelfQueryRetriever
 import chatbot_verbosity as chatbot_verbosity
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 
@@ -38,7 +39,7 @@ welcome_message = """
 
   #### Getting started 🛠️
 
-  1. To set up, please add your OpenAI's API key. 🔑 
+  1. To set up, please add your Google Gemini API key. 🔑 
   2. Type in a job description query. 💬
 
   Hint: The knowledge base of the LLM has been loaded with a pre-existing vectorstore of [resumes](https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline/blob/main/data/main-data/synthetic-resumes.csv) to be used right away. 
@@ -59,7 +60,7 @@ info_message = """
 
   ### 2. What if I want to set my own parameters?
 
-  You can change the RAG mode and the GPT's model type using the sidebar options above. 
+  You can change the RAG mode and the Gemini model type using the sidebar options above. 
 
   About the other parameters such as the generator's *temperature* or retriever's *top-K*, I don't want to allow modifying them for the time being to avoid certain problems. 
   FYI, the temperature is currently set at `0.1` and the top-K is set at `5`.  
@@ -68,7 +69,7 @@ info_message = """
 
   Your data is not being stored anyhow by the program. Everything is recorded in a Streamlit session state and will be removed once you refresh the app. 
 
-  However, it must be mentioned that the **uploaded data will be processed directly by OpenAI's GPT**, which I do not have control over. 
+  However, it must be mentioned that the **uploaded data will be processed directly by Google's Gemini**, which I do not have control over. 
   As such, it is highly recommended to use the default synthetic resumes provided by the program. 
 
   ### 4. How does the chatbot work? 
@@ -91,8 +92,8 @@ about_message = """
 """
 
 
-st.set_page_config(page_title="Resume Screening GPT")
-st.title("Resume Screening GPT")
+st.set_page_config(page_title="Resume Screening with Gemini")
+st.title("Resume Screening with Gemini")
 
 if "chat_history" not in st.session_state:
   st.session_state.chat_history = [AIMessage(content=welcome_message)]
@@ -136,25 +137,39 @@ def upload_file():
     st.session_state.rag_pipeline = SelfQueryRetriever(vectordb, st.session_state.df)
 
 
-def check_openai_api_key(api_key: str):
-  openai.api_key = api_key
-  try:
-    _ = openai.chat.completions.create(
-      model="gpt-4o-mini",  # Use a model you have access to
-      messages=[{"role": "user", "content": "Hello!"}],
-      max_tokens=3
-    )
-    return True
-  except openai.AuthenticationError as e:
+def check_gemini_api_key(api_key: str):
+  if not api_key or api_key.strip() == "":
     return False
-  else:
-    return True
+  # Basic validation - just check if the API key format is correct
+  # The actual model validation will happen when we try to use it
+  if not api_key.startswith("AIza"):
+    return False
+  # Try to validate by checking if we can create a client
+  try:
+    # Just verify the key format and that we can initialize
+    # We'll do actual model validation when the user tries to use it
+    import google.generativeai as genai
+    genai.configure(api_key=api_key)
+    # Try to list models as a basic check
+    try:
+      list(genai.list_models())
+      return True
+    except:
+      # If listing fails, the key might still be valid, just return True
+      # The actual error will show when trying to use a model
+      return True
+  except Exception as e:
+    return False
   
   
 def check_model_name(model_name: str, api_key: str):
-  openai.api_key = api_key
-  model_list = [model.id for model in openai.models.list()]
-  return True if model_name in model_list else False
+  if not api_key or api_key.strip() == "":
+    return False
+  # Just check if a model name is provided - actual validation happens when used
+  # Common Gemini model name patterns
+  if model_name and len(model_name.strip()) > 0:
+    return True
+  return False
 
 
 def clear_message():
@@ -168,9 +183,12 @@ user_query = st.chat_input("Type your message here...")
 with st.sidebar:
   st.markdown("# Control Panel")
 
-  st.text_input("OpenAI's API Key", type="password", key="api_key")
+  st.text_input("Google Gemini API Key", type="password", key="api_key")
   st.selectbox("RAG Mode", ["Generic RAG", "RAG Fusion"], placeholder="Generic RAG", key="rag_selection")
-  st.text_input("GPT Model", "gpt-4o-mini", key="gpt_selection")
+  st.selectbox("Gemini Model", 
+               ["gemini-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"],
+               index=0,
+               key="model_selection")
   st.file_uploader("Upload resumes", type=["csv"], key="uploaded_file", on_change=upload_file)
   st.button("Clear conversation", on_click=clear_message)
 
@@ -195,15 +213,18 @@ for message in st.session_state.chat_history:
 
 
 if not st.session_state.api_key:
-  st.info("Please add your OpenAI API key to continue. Learn more about [API keys](https://platform.openai.com/api-keys).")
+  st.info("Please add your Google Gemini API key to continue. Learn more about [API keys](https://ai.google.dev/gemini-api/docs/api-key).")
   st.stop()
 
-if not check_openai_api_key(st.session_state.api_key):
-  st.error("The API key is incorrect. Please set a valid OpenAI API key to continue. Learn more about [API keys](https://platform.openai.com/api-keys).")
+if not check_gemini_api_key(st.session_state.api_key):
+  st.error("The API key format is invalid. Please ensure:")
+  st.error("1. Your API key is correct (should start with 'AIza...')")
+  st.error("2. The API key has no extra spaces or characters")
+  st.error("Learn more about [API keys](https://ai.google.dev/gemini-api/docs/api-key)")
   st.stop()
 
-if not check_model_name(st.session_state.gpt_selection, st.session_state.api_key):
-  st.error("The model you specified does not exist. Learn more about [OpenAI models](https://platform.openai.com/docs/models).")
+if not check_model_name(st.session_state.model_selection, st.session_state.api_key):
+  st.error("The model you specified does not exist. Learn more about [Gemini models](https://ai.google.dev/gemini-api/docs/models/gemini).")
   st.stop()
 
 
@@ -211,7 +232,7 @@ retriever = st.session_state.rag_pipeline
 
 llm = ChatBot(
   api_key=st.session_state.api_key,
-  model=st.session_state.gpt_selection,
+  model=st.session_state.model_selection,
 )
 
 if user_query is not None and user_query != "":

@@ -1,14 +1,10 @@
 import sys
 sys.dont_write_bytecode = True
 
-from typing import List
+from typing import List, Literal
 from pydantic import BaseModel, Field
 
-from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.agents import tool
 from langchain.prompts import ChatPromptTemplate
-from langchain.schema.agent import AgentFinish
-from langchain.tools.render import format_tool_to_openai_function
 
 
 RAG_K_THRESHOLD = 5
@@ -24,7 +20,14 @@ class JobDescription(BaseModel):
   """
   Descriptions of a job to retrieve similar resumes for
   """
-  job_description: str = Field(..., description="Descriptions of a job to retrieve similar resumes for") 
+  job_description: str = Field(..., description="Descriptions of a job to retrieve similar resumes for")
+
+class QueryIntent(BaseModel):
+  """
+  Determines the intent of the user query
+  """
+  query_type: Literal["retrieve_applicant_id", "retrieve_applicant_jd", "no_retrieve"] = Field(..., description="The type of query")
+  extracted_input: str = Field(..., description="The extracted input for the query (ID list, job description, or empty)") 
 
 
 
@@ -82,7 +85,6 @@ class SelfQueryRetriever(RAGRetriever):
     }
 
   def retrieve_docs(self, question: str, llm, rag_mode: str):
-    @tool(args_schema=ApplicantID)
     def retrieve_applicant_id(id_list: list):
       """Retrieve resumes for applicants in the id_list"""
       retrieved_resumes = []
@@ -96,7 +98,6 @@ class SelfQueryRetriever(RAGRetriever):
           return []
       return retrieved_resumes
 
-    @tool(args_schema=JobDescription)
     def retrieve_applicant_jd(job_description: str):
       """Retrieve similar resumes given a job description"""
       subquestion_list = [job_description]
@@ -110,22 +111,37 @@ class SelfQueryRetriever(RAGRetriever):
       retrieved_resumes = self.retrieve_documents_with_id(retrieved_ids)
       return retrieved_resumes
     
-    def router(response):
-      if isinstance(response, AgentFinish):
-        return response.return_values["output"]
-      else:
-        toolbox = {
-          "retrieve_applicant_id": retrieve_applicant_id,
-          "retrieve_applicant_jd": retrieve_applicant_jd
-        }
-        self.meta_data["query_type"] = response.tool
-        self.meta_data["extracted_input"] = response.tool_input
-        return toolbox[response.tool].run(response.tool_input)
-      
     self.meta_data["rag_mode"] = rag_mode
-    llm_func_call = llm.llm.bind(functions=[format_tool_to_openai_function(tool) for tool in [retrieve_applicant_id, retrieve_applicant_jd]])
+    
+    # Use structured output to determine query intent
+    structured_llm = llm.llm.with_structured_output(QueryIntent)
+    
+    prompt_with_instructions = ChatPromptTemplate.from_messages([
+      ("system", """You are an expert in talent acquisition. Analyze the user query and determine:
+1. If the query contains applicant IDs (like "ID: 123" or "applicant 456"), set query_type to "retrieve_applicant_id" and extract the IDs into extracted_input as a JSON list.
+2. If the query contains a job description or requirements, set query_type to "retrieve_applicant_jd" and put the job description in extracted_input.
+3. If the query is a general question or follow-up that doesn't require retrieval, set query_type to "no_retrieve" and leave extracted_input empty.
 
-    chain = self.prompt | llm_func_call | OpenAIFunctionsAgentOutputParser() | router
-    result = chain.invoke({"input": question})
+Return your analysis as JSON with query_type and extracted_input fields."""),
+      ("user", "{input}")
+    ])
+    
+    chain = prompt_with_instructions | structured_llm
+    intent_result = chain.invoke({"input": question})
+    
+    self.meta_data["query_type"] = intent_result.query_type
+    self.meta_data["extracted_input"] = intent_result.extracted_input
+    
+    if intent_result.query_type == "retrieve_applicant_id":
+      import json
+      try:
+        id_list = json.loads(intent_result.extracted_input) if isinstance(intent_result.extracted_input, str) else intent_result.extracted_input
+        result = retrieve_applicant_id(id_list)
+      except:
+        result = []
+    elif intent_result.query_type == "retrieve_applicant_jd":
+      result = retrieve_applicant_jd(intent_result.extracted_input)
+    else:
+      result = []
 
     return result

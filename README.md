@@ -60,7 +60,7 @@ The deployed chatbot utilizes certain techniques to be more suitable for real-wo
 - Small-to-Big retrieval: The retrieval process is performed using text chunks for efficiency. The retrieved chunks are then traced back to their original full-text documents to augment the LLM generator, allowing the generator to receive the complete context of the resumes. 
 
 **Tech stacks:** 
-- `langchain`, `openai`, `huggingface`: RAG pipeline and chatbot construction.
+- `langchain`, `google-generativeai`, `huggingface`: RAG pipeline and chatbot construction.
 - `faiss`: Vector indexing and similarity retrieval.
 - `streamlit`: User interface development.
 
