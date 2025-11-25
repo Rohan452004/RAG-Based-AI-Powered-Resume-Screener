@@ -75,7 +75,7 @@ The pipeline begins by processing resumes into a vector storage. Upon receiving 
 To set up the project locally:
 ```
 # Clone the project
-git clone https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline.git
+git clone https://github.com/Rohan452004/Resume-Screening-RAG-Pipeline.git
 
 # Install dependencies
 pip install requirements.txt
@@ -88,7 +88,7 @@ streamlit run demo/interface.py
 
 ## Contributions
 
-The design of the demo chatbot is relatively simple because it only serves to show the bigger picture of the potential of RAG-like systems in the recruitment domain. As such, the system is still very much a work in progress and any suggestion, feedback, or contribution is highly appreciated! Please share them at [Issue](https://github.com/Hungreeee/Resume-Screening-RAG-Pipeline/issues). 
+The design of the demo chatbot is relatively simple because it only serves to show the bigger picture of the potential of RAG-like systems in the recruitment domain. As such, the system is still very much a work in progress and any suggestion, feedback, or contribution is highly appreciated! Please share them at [Issue](https://github.com/Rohan452004/Resume-Screening-RAG-Pipeline/issues). 
 
 ## Acknowledgement
 
