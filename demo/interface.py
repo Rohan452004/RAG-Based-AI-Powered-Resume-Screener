@@ -184,7 +184,7 @@ with st.sidebar:
   st.markdown("# Control Panel")
 
   st.text_input("Google Gemini API Key", type="password", key="api_key")
-  st.selectbox("RAG Mode", ["Generic RAG"], placeholder="Generic RAG", key="rag_selection")
+  st.selectbox("RAG Mode", ["Generic RAG", "RAG Fusion"], placeholder="Generic RAG", key="rag_selection")
   st.selectbox("Gemini Model", 
                ["gemini-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"],
                index=0,
